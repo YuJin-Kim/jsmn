@@ -44,39 +44,30 @@ char * readJSONFile() {
 }
 
 void jsonNameList(char * jsonstr, jsmntok_t *t, int tokcount, int * nameTokIndex) {
+
 	int i, count = 1;
 
-	printf("******* Name List *******\n");
-	for (i = 1; i < tokcount; i++)
-		if (t[i].type == JSMN_STRING && t[i].size > 0) {
-			printf("[NAME%2d]: %.*s\n", count, t[i].end-t[i].start,
-						jsonstr + t[i].start);
-						count++;
-	}
+	for (i = 1; i<tokcount && count<=100; i++)
+		if (t[i].size > 0 && t[i].type == JSMN_STRING) {
+			*(nameTokIndex+count-1) = i;
+			count++;
+		}
 
 }
-	// int i, count = 1;
-	//
-	// for (i = 1; i<tokcount && count<=100; i++)
-	// 	if (t[i].size > 0 && t[i].type == JSMN_STRING) {
-	// 		*(nameTokIndex+count-1) = i;
-	// 		count++;
-	// 	}
-// }
 
 void printNameList (char * jsonstr, jsmntok_t * t, int * nameTokIndex) {
 	int i;
 
 	printf("******* Name List *******\n");
 	for (i = 0; *(nameTokIndex+i)!=0; i++) {
-		printf("[NAME %d]: %.*s\n", i+1, t[*(nameTokIndex+i)].end-t[*(nameTokIndex+i)].start,
+		printf("[NAME%2d]: %.*s\n", i+1, t[*(nameTokIndex+i)].end-t[*(nameTokIndex+i)].start,
 					jsonstr + t[*(nameTokIndex+i)].start);
 	}
 }
 
 int main() {
 
-	// int * nameTokIndex = (int *)malloc(sizeof(int)*100);
+	int * nameTokIndex = (int *)malloc(sizeof(int)*100);
 	char * str_example = (char *)malloc(sizeof(readJSONFile())+1);
 	str_example = readJSONFile();
 	// printf("%s", str_example);
@@ -99,9 +90,8 @@ int main() {
 		return 1;
 	}
 
-	int * nameTokIndex = (int *)malloc(sizeof(int)*100);
 	jsonNameList(str_example, t, r, nameTokIndex);
-	//printNameList(str_example, t, nameTokIndex);
+	printNameList(str_example, t, nameTokIndex);
 
 	// /* Loop over all keys of the root object */
 	// for (i = 1; i < r; i++) {
