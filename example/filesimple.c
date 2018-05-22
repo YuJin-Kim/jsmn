@@ -55,6 +55,15 @@ void jsonNameList(char * jsonstr, jsmntok_t *t, int tokcount, int * nameTokIndex
 
 }
 
+void printNameList (char * jsonstr, jsmntok_t * t, int * nameTokIndex) {
+	int i;
+
+	printf("******* Name List *******\n");
+	for (i = 0; *(nameTokIndex+i)!=0; i++) {
+		printf("[NAME%2d]: %.*s\n", i+1, t[*(nameTokIndex+i)].end-t[*(nameTokIndex+i)].start,
+					jsonstr + t[*(nameTokIndex+i)].start);
+	}
+}
 
 int main() {
 
@@ -82,7 +91,7 @@ int main() {
 	}
 
 	jsonNameList(str_example, t, r, nameTokIndex);
-	//printNameList(str_example, t, nameTokIndex);
+	printNameList(str_example, t, nameTokIndex);
 
 	// /* Loop over all keys of the root object */
 	// for (i = 1; i < r; i++) {
