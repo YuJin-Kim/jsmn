@@ -12,13 +12,13 @@
 // 	"{\"user\": \"johndoe\", \"admin\": false, \"uid\": 1000,\n  "
 // 	"\"groups\": [\"users\", \"wheel\", \"audio\", \"video\"]}";
 //
-// static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
-// 	if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
-// 			strncmp(json + tok->start, s, tok->end - tok->start) == 0) {
-// 		return 0;
-// 	}
-// 	return -1;
-// }
+static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
+	if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
+			strncmp(json + tok->start, s, tok->end - tok->start) == 0) {
+		return 0;
+	}
+	return -1;
+}
 
 char * readJSONFile() {
 
@@ -55,6 +55,20 @@ void jsonNameList(char * jsonstr, jsmntok_t *t, int tokcount, int * nameTokIndex
 
 }
 
+void jsonObjectList (char * jsonstr, jsmntok_t * t, int tokcount) {
+	int i, count = 1; // 반복문을 위한 변수 i, Name count를 위한 변수 count 생성 및 1로 초기
+
+	printf("******* Object List *******\n"); // **Object List** 출력
+	for (i=0; i<tokcount; i++) // 각 token을 한번씩 반복해서 확인하면서
+		if (t[i].type == JSMN_OBJECT && t[i-1].size==0) { // token의 type이 JSMN_OBJECT이고,
+			//현재 token 전의 token의 size가 0이면
+			printf("[NAME%2d]: %.*s\n", count, t[i+2].end-t[i+2].start,
+		 		 			jsonstr + t[i+2].start); // 현재 token의 앞앞 token을 출력
+			count++; // count를 1증가
+		}
+
+}
+
 void printNameList (char * jsonstr, jsmntok_t * t, int * nameTokIndex) {
 	int i;
 
@@ -84,6 +98,7 @@ void selectNameList (char * jsonstr, jsmntok_t * t, int * nameTokIndex) {
 int main() {
 
 	int * nameTokIndex = (int *)malloc(sizeof(int)*100);
+	//int * objectTokIndex = (int *)malloc(sizeof(int)*5);
 	char * str_example = (char *)malloc(sizeof(readJSONFile())+1);
 	str_example = readJSONFile();
 	// printf("%s", str_example);
@@ -106,9 +121,10 @@ int main() {
 		return 1;
 	}
 
-	jsonNameList(str_example, t, r, nameTokIndex);
-	printNameList(str_example, t, nameTokIndex);
-	selectNameList(str_example, t, nameTokIndex);
+	//jsonNameList(str_example, t, r, nameTokIndex);
+	//printNameList(str_example, t, nameTokIndex);
+	//selectNameList(str_example, t, nameTokIndex);
+	jsonObjectList(str_example, t, r); // 전체 객체의 첫번째 데이터 value list를 보여주는 function
 
 	// /* Loop over all keys of the root object */
 	// for (i = 1; i < r; i++) {
