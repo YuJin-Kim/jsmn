@@ -22,7 +22,7 @@ static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
 
 char * readJSONFile() {
 
-	FILE *f = fopen("data.json","r");
+	FILE *f = fopen("data3.json","r");
 	char * JSON_STRING;
 	char str[256];
 	int count = 0;
@@ -43,42 +43,59 @@ char * readJSONFile() {
 
 }
 
-void jsonNameList(char * jsonstr, jsmntok_t *t, int tokcount, int * nameTokIndex) {
+void jsonNameList(char * jsonstr, jsmntok_t *t, int tokcount, int * nameTokIndex, int * objectTokIndex) {
+	int i=0, j, count = 1;
 
-	int i, count = 1;
-
-	for (i = 1; i<tokcount && count<=100; i++)
-		if (t[i].size > 0 && t[i].type == JSMN_STRING) {
-			*(nameTokIndex+count-1) = i;
-			count++;
-		}
+	do {
+		for (j = 1; j < tokcount && count<=100; j++)
+			if(t[j].parent == *(objectTokIndex+i)) {
+				*(nameTokIndex+count-1) = j;
+				count++;
+			}
+			i++;
+	} while(*(objectTokIndex+i+1)!= 0);
 
 }
 
-void printObjectList (char * jsonstr, jsmntok_t * t, int tokcount, int * objectTokIndex) {
+int * jsonObjectList(char * jsonstr, jsmntok_t * t, int tokcount) {
 	int i, count = 1; // 반복문을 위한 변수 i, Name count를 위한 변수 count 생성 및 1로 초기
 
-	printf("******* Object List *******\n"); // **Object List** 출력
-	for (i=0; i<tokcount; i++) // 각 token을 한번씩 반복해서 확인하면서
-		if (t[i].type == JSMN_OBJECT && t[i-1].size==0) { // token의 type이 JSMN_OBJECT이고,
-			//현재 token 전의 token의 size가 0이면
+	int * objectTokIndex = (int *)malloc(sizeof(int)*count);
+
+	for (i = 0; i < tokcount; i++)
+		if(t[i].parent == -1) {
 			*(objectTokIndex+count-1) = i;
-			printf("[NAME%2d]: %.*s\n", count, t[i+2].end-t[i+2].start,
-		 		 			jsonstr + t[i+2].start); // 현재 token의 앞앞 token을 출력
-			count++; // count를 1증가
+			count++;
+			objectTokIndex = (int *)realloc(objectTokIndex,sizeof(int)*(count+1));
 		}
+
 	*(objectTokIndex+count-1) = i;
+	*(objectTokIndex+count) = 0;
+
+	return objectTokIndex;
+}
+
+void printObjectList (char * jsonstr, jsmntok_t * t, int tokcount, int * objectTokIndex) {
+	int i = 0; // 반복문을 위한 변수 i, Name count를 위한 변수 count 생성 및 1로 초기
+
+	printf("******* Object List *******\n"); // **Object List** 출력
+	do {
+		printf("[NAME%2d]: %.*s\n", i+1, t[*(objectTokIndex+i)+2].end-t[*(objectTokIndex+i)+2].start,
+		 		 			jsonstr + t[*(objectTokIndex+i)+2].start);
+		i++;
+	}while (*(objectTokIndex+i+1)!= 0);
 
 }
 
 void printNameList (char * jsonstr, jsmntok_t * t, int * nameTokIndex) {
 	int i;
 
-	printf("******* Name List *******\n");
+	printf("******** Name List ********\n");
 	for (i = 0; *(nameTokIndex+i)!=0; i++) {
 		printf("[NAME%2d]: %.*s\n", i+1, t[*(nameTokIndex+i)].end-t[*(nameTokIndex+i)].start,
 					jsonstr + t[*(nameTokIndex+i)].start);
 	}
+	printf("\n");
 }
 
 void selectNameList (char * jsonstr, jsmntok_t * t, int * nameTokIndex) {
@@ -98,7 +115,7 @@ void selectNameList (char * jsonstr, jsmntok_t * t, int * nameTokIndex) {
 }
 
 void selectObjectList(char * jsonstr, jsmntok_t * t, int * objectTokIndex) {
-	int n;
+	int n, count = 0;
 
 	do {
 		printf("\n원하는 번호 입력 (exit:0) >> ");
@@ -111,25 +128,23 @@ void selectObjectList(char * jsonstr, jsmntok_t * t, int * objectTokIndex) {
 						t[*(objectTokIndex+n-1)+2].end-t[*(objectTokIndex+n-1)+2].start,
 						jsonstr + t[*(objectTokIndex+n-1)+2].start);
 
-		for (int i = 3; *(objectTokIndex+n-1)+i < *(objectTokIndex+n) ; i+=2) {
-			if (t[*(objectTokIndex+n-1)+i].size == 0) {
-				i--;
-				continue;
-			}
-
-			printf("	[%.*s]	%.*s\n", t[*(objectTokIndex+n-1)+i].end-t[*(objectTokIndex+n-1)+i].start,
-							jsonstr + t[*(objectTokIndex+n-1)+i].start,
-							t[*(objectTokIndex+n-1)+i+1].end-t[*(objectTokIndex+n-1)+i+1].start,
-							jsonstr + t[*(objectTokIndex+n-1)+i+1].start);
+		for (int i = 3; *(objectTokIndex+n-1)+i < *(objectTokIndex+n) ; i++) {
+			if (t[*(objectTokIndex+n-1)+i].type == JSMN_STRING && t[*(objectTokIndex+n-1)+i].size != 0)
+				printf("	[%.*s]	%.*s\n", t[*(objectTokIndex+n-1)+i].end-t[*(objectTokIndex+n-1)+i].start,
+								jsonstr + t[*(objectTokIndex+n-1)+i].start,
+								t[*(objectTokIndex+n-1)+i+1].end-t[*(objectTokIndex+n-1)+i+1].start,
+								jsonstr + t[*(objectTokIndex+n-1)+i+1].start);
 		}
 	}while(1);
 
 }
 
+//void printNameValueOfObject(char * jsonstr, jsmntok_t * t, int * objectTokIndex, int n, )
+
 int main() {
 
 	int * nameTokIndex = (int *)malloc(sizeof(int)*100);
-	int * objectTokIndex = (int *)malloc(sizeof(int)*5);
+	int * objectTokIndex;
 	char * str_example = (char *)malloc(sizeof(readJSONFile())+1);
 	str_example = readJSONFile();
 	// printf("%s", str_example);
@@ -152,8 +167,10 @@ int main() {
 		return 1;
 	}
 
-	//jsonNameList(str_example, t, r, nameTokIndex);
-	//printNameList(str_example, t, nameTokIndex);
+	objectTokIndex = jsonObjectList(str_example, t, r);
+	jsonNameList(str_example, t, r, nameTokIndex, objectTokIndex);
+	printNameList(str_example, t, nameTokIndex);
+	printf("%d %d %d %d %d %d\n", objectTokIndex[0], objectTokIndex[1], objectTokIndex[2], objectTokIndex[3], objectTokIndex[4], objectTokIndex[5]);
 	//selectNameList(str_example, t, nameTokIndex);
 	printObjectList(str_example, t, r, objectTokIndex); // 전체 객체의 첫번째 데이터 value list를 보여주는 function
 	selectObjectList(str_example, t, objectTokIndex);
