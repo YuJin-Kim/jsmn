@@ -62,12 +62,21 @@ int * jsonObjectList(char * jsonstr, jsmntok_t * t, int tokcount) {
 
 	int * objectTokIndex = (int *)malloc(sizeof(int)*count);
 
-	for (i = 0; i < tokcount; i++)
-		if(t[i].parent == -1) {
-			*(objectTokIndex+count-1) = i;
-			count++;
-			objectTokIndex = (int *)realloc(objectTokIndex,sizeof(int)*(count+1));
+	for (i = 0; i < tokcount; i++) {
+		if (t[0].type == JSMN_OBJECT) {
+			if(t[i].parent == -1) {
+				*(objectTokIndex+count-1) = i;
+				count++;
+				objectTokIndex = (int *)realloc(objectTokIndex,sizeof(int)*(count+1));
+			}
+		} else {
+			if(t[i].parent == 0) {
+				*(objectTokIndex+count-1) = i;
+				count++;
+				objectTokIndex = (int *)realloc(objectTokIndex,sizeof(int)*(count+1));
+			}
 		}
+	}
 
 	*(objectTokIndex+count-1) = i;
 	*(objectTokIndex+count) = 0;
@@ -162,15 +171,14 @@ int main() {
 	}
 
 	/* Assume the top-level element is an object */
-	if (r < 1 || t[0].type != JSMN_OBJECT) {
-		printf("Object expected\n");
+	if (r < 1 || (t[0].type != JSMN_OBJECT && t[0].type != JSMN_ARRAY)) {
+		printf("Object or Array expected\n");
 		return 1;
 	}
 
 	objectTokIndex = jsonObjectList(str_example, t, r);
 	jsonNameList(str_example, t, r, nameTokIndex, objectTokIndex);
 	printNameList(str_example, t, nameTokIndex);
-	printf("%d %d %d %d %d %d\n", objectTokIndex[0], objectTokIndex[1], objectTokIndex[2], objectTokIndex[3], objectTokIndex[4], objectTokIndex[5]);
 	//selectNameList(str_example, t, nameTokIndex);
 	printObjectList(str_example, t, r, objectTokIndex); // 전체 객체의 첫번째 데이터 value list를 보여주는 function
 	selectObjectList(str_example, t, objectTokIndex);
