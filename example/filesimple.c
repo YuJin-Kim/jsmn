@@ -21,11 +21,20 @@ static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
 }
 
 char * readJSONFile() {
-
-	FILE *f = fopen("data3.json","r");
 	char * JSON_STRING;
+	char filename[30];
 	char str[256];
 	int count = 0;
+	FILE *f;
+
+	printf("원하는 파일명 입력: ");
+	scanf("%s", filename);
+	strcat(filename,".json");
+
+	if ((f = fopen(filename,"r")) == NULL) {
+		printf("%s 파일이 존재하지 않습니다.\n", filename);
+		return NULL;
+	}
 
 	JSON_STRING = (char *)malloc(sizeof(str));
 
@@ -62,20 +71,29 @@ int * jsonObjectList(char * jsonstr, jsmntok_t * t, int tokcount) {
 
 	int * objectTokIndex = (int *)malloc(sizeof(int)*count);
 
-	for (i = 0; i < tokcount; i++) {
-		if (t[0].type == JSMN_OBJECT) {
+	if (t[0].type == JSMN_OBJECT && t[2].type == JSMN_ARRAY) {
+		for (i = 0; i < tokcount; i++)
+			if(t[i].parent == 2) {
+				*(objectTokIndex+count-1) = i;
+				count++;
+				objectTokIndex = (int *)realloc(objectTokIndex,sizeof(int)*(count+1));
+			}
+	}
+	else if (t[0].type == JSMN_OBJECT) {
+		for (i = 0; i < tokcount; i++)
 			if(t[i].parent == -1) {
 				*(objectTokIndex+count-1) = i;
 				count++;
 				objectTokIndex = (int *)realloc(objectTokIndex,sizeof(int)*(count+1));
 			}
-		} else {
+	}
+	else {
+		for (i = 0; i < tokcount; i++)
 			if(t[i].parent == 0) {
 				*(objectTokIndex+count-1) = i;
 				count++;
 				objectTokIndex = (int *)realloc(objectTokIndex,sizeof(int)*(count+1));
 			}
-		}
 	}
 
 	*(objectTokIndex+count-1) = i;
@@ -156,6 +174,9 @@ int main() {
 	int * objectTokIndex;
 	char * str_example = (char *)malloc(sizeof(readJSONFile())+1);
 	str_example = readJSONFile();
+
+	if (str_example == NULL)
+		return 1;
 	// printf("%s", str_example);
 
 	int i;
