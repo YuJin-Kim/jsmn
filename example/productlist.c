@@ -110,11 +110,12 @@ int jsonNameList(char * jsonstr, jsmntok_t * t, int tokcount, NameTokenInfo * na
 }
 
 void printList(char * jsonstr, jsmntok_t * t, NameTokenInfo * nameTokenInfo) {
-	int i = 1, index;
+	int i = 1, index, price, count;
+	char str_price[10], str_count[8];
 
-	printf("***********************************************\n");
-	printf(" 번호      제품명      제조사     가격    개수\n");
-	printf("***********************************************\n");
+	printf("*********************************************************\n");
+	printf(" 번호      제품명      제조사     가격    개수    총가격\n");
+	printf("*********************************************************\n");
 
 	do {
 		index = getTokIndex(jsonstr, t, nameTokenInfo, i, "제품명");
@@ -124,9 +125,14 @@ void printList(char * jsonstr, jsmntok_t * t, NameTokenInfo * nameTokenInfo) {
 		index = getTokIndex(jsonstr, t, nameTokenInfo, i, "제조사");
 		printf("     %8.*s", t[index].end-t[index].start,jsonstr + t[index].start);
 		index = getTokIndex(jsonstr, t, nameTokenInfo, i, "가격");
-		printf("    %5.*s", t[index].end-t[index].start,jsonstr + t[index].start);
+		strncpy(str_price, &jsonstr[t[index].start], t[index].end-t[index].start);
+		price = atoi(str_price);
+		printf("    %5d", price);
 		index = getTokIndex(jsonstr, t, nameTokenInfo, i, "개수");
-		printf("      %.*s\n", t[index].end-t[index].start,jsonstr + t[index].start);
+		strncpy(str_count, &jsonstr[t[index].start], t[index].end-t[index].start);
+		count = atoi(str_count);
+		printf("      %d", count);
+		printf("       %d\n", price*count);
 		i++;
 	} while(1);
 
