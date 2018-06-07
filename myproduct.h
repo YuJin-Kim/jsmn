@@ -20,7 +20,7 @@ typedef enum {
 
 typedef struct {
 	function_t function;
-	char name[20];
+	char name[80];
 	char event[20];
 	int price;
 	int count;
